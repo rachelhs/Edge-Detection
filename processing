@@ -1,19 +1,23 @@
-PImage img;
+import processing.video.*;
+
 PImage outline;
+Capture cam;
 
 void setup() {
-  size(400, 400);
-  img = loadImage("dog.jpg");
-  
-  //set image to black and white
-  
-  img.filter(THRESHOLD);
-  image(img, 0, 0, width, height);
-  outline = createImage(width, height, RGB);
-  findEdge();
+  size(360, 360);
+  String[] cameras = Capture.list();
+  cam = new Capture(this, cameras[3]);
+  cam.start();
 }
 
 void draw() {
+  outline = createImage(width, height, RGB);
+  if (cam.available() == true) {
+    cam.read();
+  }
+  cam.filter(THRESHOLD);
+  image(cam, 0, 0, width, height);
+  findEdge();
 }
 
 void findEdge() {
@@ -21,21 +25,18 @@ void findEdge() {
   loadPixels();
   outline.loadPixels();
 
-    for (int y = 1; y< height-1; y++) {
-      for (int x = 1; x< width-1; x++) {
-        int loc = x+y*width;
-        int left = (x-1)+y*width;
-        float lo = red(pixels[loc]);
-        float l = red(pixels[left]);
-        
-        //compare each pixel to it's left neighbour, if different turn black
-        
-        if (abs(lo-l)>100) {
-          outline.pixels[loc]=color(0);
-        } else {
-          outline.pixels[loc] = color(255);
-        }
+  for (int y = 1; y< height-1; y++) {
+    for (int x = 1; x< width-1; x++) {
+      int loc = x+y*width;
+      int left = (x-1)+y*width;
+      float lo = red(pixels[loc]);
+      float l = red(pixels[left]);
+      if (abs(lo-l)>100) {
+        outline.pixels[loc]=color(0);
+      } else {
+        outline.pixels[loc] = color(255);
       }
     }
+  }
   image(outline, 0, 0, width, height);
 }
